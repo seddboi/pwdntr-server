@@ -185,6 +185,6 @@ function authorizationToken(req, res, next) {
 	});
 }
 
-app.listen(`${PORT}`, () => {
-	console.log(`running server on port ${PORT}`);
+app.listen(`${process.env.PORT}`, () => {
+	console.log(`running server on port ${process.env.PORT}`);
 });
