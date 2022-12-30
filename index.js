@@ -98,7 +98,7 @@ app.post('/signup', async (req, res) => {
 						res.send({err: err});
 					} else {
 						const userID = result.insertId;
-						const token = jwt.sign({userID}, process.env.REACT_APP_ACCESS_TOKEN);
+						const token = jwt.sign({userID}, process.env.ACCESS_TOKEN);
 		
 						res.json({
 							auth: true,
@@ -126,7 +126,7 @@ app.post('/login', (req, res) => {
 				bcrypt.compare(password, result[0].password, async (error, response) => {
 					if (response) {	
 						const userID = result[0].id;
-						const token =  jwt.sign({userID}, process.env.REACT_APP_ACCESS_TOKEN);
+						const token =  jwt.sign({userID}, process.env.ACCESS_TOKEN);
 
 						// req.session.user = result;
 						res.json({
@@ -176,7 +176,7 @@ function authorizationToken(req, res, next) {
 		if (result[0].total > 0) {
 			res.sendStatus(403);
 		} else {
-			jwt.verify(token, process.env.REACT_APP_ACCESS_TOKEN, (err, userID) => {
+			jwt.verify(token, process.env.ACCESS_TOKEN, (err, userID) => {
 				if (err) return res.sendStatus(403)
 				req.userID = userID; 
 				next();
