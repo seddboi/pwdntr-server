@@ -14,9 +14,9 @@ app.use(cors());
 const db = mysql.createConnection({
 	user: 'root',
 	host: 'containers-us-west-179.railway.app',
-	password: process.env.REACT_APP_MYSQLPASSWORD,
+	password: `${{ MYSQLPASSWORD}}`,
 	database: 'railway',
-	port: process.env.REACT_APP_MYSQLPORT
+	port: `${{ MYSQLPORT}}`
 });
 
 app.get('/saved/:userID', authorizationToken, (req,res) => {
