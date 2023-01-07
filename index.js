@@ -15,6 +15,8 @@ app.use((req, res, next) => {
 	next();
 });
 
+app.use(cors());
+
 const db = mysql.createConnection({
 	user: 'root',
 	host: 'containers-us-west-179.railway.app',
