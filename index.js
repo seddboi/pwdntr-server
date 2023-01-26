@@ -1,7 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-const jwt = require ('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 const app = express();
@@ -11,7 +11,7 @@ require('dotenv').config();
 app.use(express.json());
 
 app.use((req, res, next) => {
-	res.header('Access-Control-Allow-Origin', '*');
+	res.header('Access-Control-Allow-Origin', 'https://graceful-dango-eb28ce.netlify.app');
 	next();
 });
 
@@ -22,10 +22,10 @@ const db = mysql.createConnection({
 	host: 'containers-us-west-179.railway.app',
 	password: process.env.MYSQLPASSWORD,
 	database: 'railway',
-	port: process.env.MYSQLPORT
+	port: process.env.MYSQLPORT,
 });
 
-app.get('/saved/:userID', authorizationToken, (req,res) => {
+app.get('/saved/:userID', authorizationToken, (req, res) => {
 	const userID = req.params['userID'];
 
 	db.query(`SELECT * FROM passwords WHERE userID = ?`, [userID], (err, results) => {
@@ -45,13 +45,17 @@ app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
 	const username = req.body.username;
 	const password = req.body.password;
 
-	db.query('UPDATE passwords SET website = ?, username = ?, password = ? WHERE userID = ? AND passwordID = ?', [website, username, password, userID, passID], (err, results) => {
-		if (err) {
-			console.log(err);
-		} else {
-			res.status(200).send('Successfully updated entry.')
+	db.query(
+		'UPDATE passwords SET website = ?, username = ?, password = ? WHERE userID = ? AND passwordID = ?',
+		[website, username, password, userID, passID],
+		(err, results) => {
+			if (err) {
+				console.log(err);
+			} else {
+				res.status(200).send('Successfully updated entry.');
+			}
 		}
-	})
+	);
 });
 
 app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
@@ -62,9 +66,9 @@ app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
 		if (err) {
 			console.log(err);
 		} else {
-			res.status(200).send('Successfully removed.')
+			res.status(200).send('Successfully removed.');
 		}
-	})
+	});
 });
 
 app.post('/add', authorizationToken, (req, res) => {
@@ -84,7 +88,7 @@ app.post('/add', authorizationToken, (req, res) => {
 				res.send(result);
 			}
 		}
-	)
+	);
 });
 
 app.post('/signup', async (req, res) => {
@@ -94,60 +98,58 @@ app.post('/signup', async (req, res) => {
 
 	db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
 		if (result.length > 0) {
-			res.send({message: 'Email already exists. Please select another.'})
+			res.send({ message: 'Email already exists. Please select another.' });
 		} else {
 			db.query(
-				'INSERT INTO users (username, password, email) VALUES (?,?,?)', 
-				[username, hashedPassword, email], 
+				'INSERT INTO users (username, password, email) VALUES (?,?,?)',
+				[username, hashedPassword, email],
 				(err, result) => {
 					if (err) {
-						res.send({err: err});
+						res.send({ err: err });
 					} else {
 						const userID = result.insertId;
-						const token = jwt.sign({userID}, process.env.ACCESS_TOKEN);
-		
+						const token = jwt.sign({ userID }, process.env.ACCESS_TOKEN);
+
 						res.json({
 							auth: true,
 							token: token,
-							result: {id: userID, username: username}
+							result: { id: userID, username: username },
 						});
 					}
-				});
+				}
+			);
 		}
-	})
-}); 
+	});
+});
 
 app.post('/login', (req, res) => {
 	const username = req.body.username;
 	const password = req.body.password;
 
-	db.query('SELECT * FROM users WHERE username = ?', 
-		[username], 
-		(err, result) => {
-			if (err) {
-				res.send({err: err});
-			} 
-			
-			if (result.length > 0) {
-				bcrypt.compare(password, result[0].password, async (error, response) => {
-					if (response) {	
-						const userID = result[0].id;
-						const token =  jwt.sign({userID}, process.env.ACCESS_TOKEN);
+	db.query('SELECT * FROM users WHERE username = ?', [username], (err, result) => {
+		if (err) {
+			res.send({ err: err });
+		}
 
-						// req.session.user = result;
-						res.json({
-							auth: true, 
-							token: token, 
-							result: {id: userID, username: result[0].username} 
-						});
-							
-					} else {
-						res.send({message: 'Wrong username/password combination.'})
-					}
-				}); 
-			} else {
-				res.send({message: 'No user found.'})
-			}
+		if (result.length > 0) {
+			bcrypt.compare(password, result[0].password, async (error, response) => {
+				if (response) {
+					const userID = result[0].id;
+					const token = jwt.sign({ userID }, process.env.ACCESS_TOKEN);
+
+					// req.session.user = result;
+					res.json({
+						auth: true,
+						token: token,
+						result: { id: userID, username: result[0].username },
+					});
+				} else {
+					res.send({ message: 'Wrong username/password combination.' });
+				}
+			});
+		} else {
+			res.send({ message: 'No user found.' });
+		}
 	});
 });
 
@@ -163,7 +165,7 @@ app.post('/logout', (req, res) => {
 			res.json({
 				auth: false,
 				token: null,
-				result: null
+				result: null,
 			});
 		}
 	});
@@ -171,22 +173,22 @@ app.post('/logout', (req, res) => {
 
 function authorizationToken(req, res, next) {
 	const authHeader = req.headers['authorization'];
-	const token = authHeader && authHeader.split(' ')[1]; 
+	const token = authHeader && authHeader.split(' ')[1];
 
-	if (token == null) return res.sendStatus(401); 
+	if (token == null) return res.sendStatus(401);
 	db.query('SELECT COUNT(*) AS total FROM blacklist WHERE token = ?', [token], (err, result) => {
 		if (err) {
 			console.log(err);
-		};
+		}
 
 		if (result[0].total > 0) {
 			res.sendStatus(403);
 		} else {
 			jwt.verify(token, process.env.ACCESS_TOKEN, (err, userID) => {
-				if (err) return res.sendStatus(403)
-				req.userID = userID; 
+				if (err) return res.sendStatus(403);
+				req.userID = userID;
 				next();
-			})
+			});
 		}
 	});
 }
