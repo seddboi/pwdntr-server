@@ -11,10 +11,10 @@ require('dotenv').config();
 
 app.use(express.json());
 
-// app.use((req, res, next) => {
-// 	res.header('Access-Control-Allow-Origin', 'https://graceful-dango-eb28ce.netlify.app');
-// 	next();
-// });
+app.use((req, res, next) => {
+	res.header('Access-Control-Allow-Origin', 'https://passwordinator.netlify.app');
+	next();
+});
 
 app.use(cors());
 
