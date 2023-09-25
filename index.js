@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { encrypt, decrypt } = require('./utils/crypt.js');
 
 const app = express();
 
@@ -10,10 +11,10 @@ require('dotenv').config();
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-	res.header('Access-Control-Allow-Origin', 'https://graceful-dango-eb28ce.netlify.app');
-	next();
-});
+// app.use((req, res, next) => {
+// 	res.header('Access-Control-Allow-Origin', 'https://graceful-dango-eb28ce.netlify.app');
+// 	next();
+// });
 
 app.use(cors());
 
@@ -32,6 +33,11 @@ app.get('/saved/:userID', authorizationToken, (req, res) => {
 		if (err) {
 			console.log(err);
 		} else {
+			results.forEach((passObj) => {
+				passObj.username = decrypt(passObj.username, process.env.USECRET);
+				passObj.password = decrypt(passObj.password, process.env.PSECRET);
+			});
+
 			res.status(200).send(results);
 		}
 	});
@@ -42,8 +48,8 @@ app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
 	const passID = req.params['passID'];
 
 	const website = req.body.website;
-	const username = req.body.username;
-	const password = req.body.password;
+	const username = encrypt(req.body.username, process.env.USECRET);
+	const password = encrypt(req.body.password, process.env.PSECRET);
 
 	db.query(
 		'UPDATE passwords SET website = ?, username = ?, password = ? WHERE userID = ? AND passwordID = ?',
@@ -73,14 +79,14 @@ app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
 
 app.post('/add', authorizationToken, (req, res) => {
 	const userID = req.body.userID;
-	const username = req.body.username;
-	const hashedPassword = req.body.password;
+	const encryptedU = encrypt(req.body.username, process.env.USECRET);
+	const encryptedP = encrypt(req.body.password, process.env.PSECRET);
 	const timeCreated = req.body.timeCreated;
 	const website = req.body.website;
 
 	db.query(
 		'INSERT INTO passwords (userID, username, password, timeCreated, website) VALUES (?,?,?,?,?)',
-		[userID, username, hashedPassword, timeCreated, website],
+		[userID, encryptedU, encryptedP, timeCreated, website],
 		(err, result) => {
 			if (err) {
 				console.log(err);
@@ -93,7 +99,7 @@ app.post('/add', authorizationToken, (req, res) => {
 
 app.post('/signup', async (req, res) => {
 	const username = req.body.username;
-	const email = req.body.email;
+	const email = encrypt(req.body.email, process.env.EMSECRET);
 	const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
 	db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
