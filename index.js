@@ -26,10 +26,10 @@ const db = mysql.createConnection({
 	port: process.env.MYSQLPORT,
 });
 
-app.get('/saved/:userID', authorizationToken, (req, res) => {
+app.get('/saved/:userID', authorizationToken, async (req, res) => {
 	const userID = req.params['userID'];
 
-	db.query(`SELECT * FROM passwords WHERE userID = ?`, [userID], (err, results) => {
+	await db.query(`SELECT * FROM passwords WHERE userID = ?`, [userID], (err, results) => {
 		if (err) {
 			console.log(err);
 		} else {
@@ -41,9 +41,11 @@ app.get('/saved/:userID', authorizationToken, (req, res) => {
 			res.status(200).send(results);
 		}
 	});
+
+	db.end();
 });
 
-app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
+app.put('/saved/:userID/:passID', authorizationToken, async (req, res) => {
 	const userID = req.params['userID'];
 	const passID = req.params['passID'];
 
@@ -51,7 +53,7 @@ app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
 	const username = encrypt(req.body.username, process.env.USECRET);
 	const password = encrypt(req.body.password, process.env.PSECRET);
 
-	db.query(
+	await db.query(
 		'UPDATE passwords SET website = ?, username = ?, password = ? WHERE userID = ? AND passwordID = ?',
 		[website, username, password, userID, passID],
 		(err, results) => {
@@ -62,9 +64,11 @@ app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
 			}
 		}
 	);
+
+	db.end();
 });
 
-app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
+app.delete('/saved/:userID/:passID', authorizationToken, async (req, res) => {
 	const userID = req.params['userID'];
 	const passID = req.params['passID'];
 
@@ -75,16 +79,18 @@ app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
 			res.status(200).send('Successfully removed.');
 		}
 	});
+
+	db.end();
 });
 
-app.post('/add', authorizationToken, (req, res) => {
+app.post('/add', authorizationToken, async (req, res) => {
 	const userID = req.body.userID;
 	const encryptedU = encrypt(req.body.username, process.env.USECRET);
 	const encryptedP = encrypt(req.body.password, process.env.PSECRET);
 	const timeCreated = req.body.timeCreated;
 	const website = req.body.website;
 
-	db.query(
+	await db.query(
 		'INSERT INTO passwords (userID, username, password, timeCreated, website) VALUES (?,?,?,?,?)',
 		[userID, encryptedU, encryptedP, timeCreated, website],
 		(err, result) => {
@@ -95,6 +101,8 @@ app.post('/add', authorizationToken, (req, res) => {
 			}
 		}
 	);
+
+	db.end();
 });
 
 app.post('/signup', async (req, res) => {
@@ -102,7 +110,7 @@ app.post('/signup', async (req, res) => {
 	const email = encrypt(req.body.email, process.env.EMSECRET);
 	const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-	db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
+	await db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
 		if (result.length > 0) {
 			res.send({ message: 'Email already exists. Please select another.' });
 		} else {
@@ -126,13 +134,15 @@ app.post('/signup', async (req, res) => {
 			);
 		}
 	});
+
+	db.end();
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
 	const username = req.body.username;
 	const password = req.body.password;
 
-	db.query('SELECT * FROM users WHERE username = ?', [username], (err, result) => {
+	await db.query('SELECT * FROM users WHERE username = ?', [username], (err, result) => {
 		if (err) {
 			res.send({ err: err });
 		}
@@ -157,14 +167,16 @@ app.post('/login', (req, res) => {
 			res.send({ message: 'No user found.' });
 		}
 	});
+
+	db.end();
 });
 
-app.post('/logout', (req, res) => {
+app.post('/logout', async (req, res) => {
 	const userID = req.body.userID;
 	const token = req.body.token;
 
 	// log user out on client side and add current access token to blacklist db
-	db.query('INSERT INTO blacklist (userid, token) VALUES (?, ?)', [userID, token], (err, result) => {
+	await db.query('INSERT INTO blacklist (userid, token) VALUES (?, ?)', [userID, token], (err, result) => {
 		if (err) {
 			console.log(err);
 		} else {
@@ -175,6 +187,8 @@ app.post('/logout', (req, res) => {
 			});
 		}
 	});
+
+	db.end();
 });
 
 function authorizationToken(req, res, next) {
