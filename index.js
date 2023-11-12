@@ -41,8 +41,6 @@ app.get('/saved/:userID', authorizationToken, (req, res) => {
 			res.status(200).send(results);
 		}
 	});
-
-	db.end();
 });
 
 app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
@@ -64,8 +62,6 @@ app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
 			}
 		}
 	);
-
-	db.end();
 });
 
 app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
@@ -79,8 +75,6 @@ app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
 			res.status(200).send('Successfully removed.');
 		}
 	});
-
-	db.end();
 });
 
 app.post('/add', authorizationToken, (req, res) => {
@@ -101,8 +95,6 @@ app.post('/add', authorizationToken, (req, res) => {
 			}
 		}
 	);
-
-	db.end();
 });
 
 app.post('/signup', async (req, res) => {
@@ -134,8 +126,6 @@ app.post('/signup', async (req, res) => {
 			);
 		}
 	});
-
-	db.end();
 });
 
 app.post('/login', (req, res) => {
@@ -146,7 +136,6 @@ app.post('/login', (req, res) => {
 		if (err) {
 			res.send({ err: err });
 		}
-		console.log(result);
 		if (result.length > 0) {
 			bcrypt.compare(password, result[0].password, async (error, response) => {
 				if (response) {
@@ -167,8 +156,6 @@ app.post('/login', (req, res) => {
 			res.send({ message: 'No user found.' });
 		}
 	});
-
-	db.end();
 });
 
 app.post('/logout', (req, res) => {
@@ -187,8 +174,6 @@ app.post('/logout', (req, res) => {
 			});
 		}
 	});
-
-	db.end();
 });
 
 function authorizationToken(req, res, next) {
