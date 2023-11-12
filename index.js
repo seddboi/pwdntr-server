@@ -26,10 +26,10 @@ const db = mysql.createConnection({
 	port: process.env.MYSQLPORT,
 });
 
-app.get('/saved/:userID', authorizationToken, async (req, res) => {
+app.get('/saved/:userID', authorizationToken, (req, res) => {
 	const userID = req.params['userID'];
 
-	await db.query(`SELECT * FROM passwords WHERE userID = ?`, [userID], (err, results) => {
+	db.query(`SELECT * FROM passwords WHERE userID = ?`, [userID], (err, results) => {
 		if (err) {
 			console.log(err);
 		} else {
@@ -45,7 +45,7 @@ app.get('/saved/:userID', authorizationToken, async (req, res) => {
 	db.end();
 });
 
-app.put('/saved/:userID/:passID', authorizationToken, async (req, res) => {
+app.put('/saved/:userID/:passID', authorizationToken, (req, res) => {
 	const userID = req.params['userID'];
 	const passID = req.params['passID'];
 
@@ -53,7 +53,7 @@ app.put('/saved/:userID/:passID', authorizationToken, async (req, res) => {
 	const username = encrypt(req.body.username, process.env.USECRET);
 	const password = encrypt(req.body.password, process.env.PSECRET);
 
-	await db.query(
+	db.query(
 		'UPDATE passwords SET website = ?, username = ?, password = ? WHERE userID = ? AND passwordID = ?',
 		[website, username, password, userID, passID],
 		(err, results) => {
@@ -68,7 +68,7 @@ app.put('/saved/:userID/:passID', authorizationToken, async (req, res) => {
 	db.end();
 });
 
-app.delete('/saved/:userID/:passID', authorizationToken, async (req, res) => {
+app.delete('/saved/:userID/:passID', authorizationToken, (req, res) => {
 	const userID = req.params['userID'];
 	const passID = req.params['passID'];
 
@@ -83,14 +83,14 @@ app.delete('/saved/:userID/:passID', authorizationToken, async (req, res) => {
 	db.end();
 });
 
-app.post('/add', authorizationToken, async (req, res) => {
+app.post('/add', authorizationToken, (req, res) => {
 	const userID = req.body.userID;
 	const encryptedU = encrypt(req.body.username, process.env.USECRET);
 	const encryptedP = encrypt(req.body.password, process.env.PSECRET);
 	const timeCreated = req.body.timeCreated;
 	const website = req.body.website;
 
-	await db.query(
+	db.query(
 		'INSERT INTO passwords (userID, username, password, timeCreated, website) VALUES (?,?,?,?,?)',
 		[userID, encryptedU, encryptedP, timeCreated, website],
 		(err, result) => {
@@ -110,7 +110,7 @@ app.post('/signup', async (req, res) => {
 	const email = encrypt(req.body.email, process.env.EMSECRET);
 	const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-	await db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
+	db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
 		if (result.length > 0) {
 			res.send({ message: 'Email already exists. Please select another.' });
 		} else {
@@ -171,12 +171,12 @@ app.post('/login', (req, res) => {
 	db.end();
 });
 
-app.post('/logout', async (req, res) => {
+app.post('/logout', (req, res) => {
 	const userID = req.body.userID;
 	const token = req.body.token;
 
 	// log user out on client side and add current access token to blacklist db
-	await db.query('INSERT INTO blacklist (userid, token) VALUES (?, ?)', [userID, token], (err, result) => {
+	db.query('INSERT INTO blacklist (userid, token) VALUES (?, ?)', [userID, token], (err, result) => {
 		if (err) {
 			console.log(err);
 		} else {
