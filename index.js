@@ -1,22 +1,27 @@
 const express = require('express');
 const mysql = require('mysql2');
-const cors = require('cors');
+// const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { encrypt, decrypt } = require('./utils/crypt.js');
 
 const app = express();
+// app.use(cors());
 
 require('dotenv').config();
 
 app.use(express.json());
 
 app.use((req, res, next) => {
-	res.header('Access-Control-Allow-Origin', 'https://passwordinator.netlify.app');
+	// res.header('Access-Control-Allow-Origin', 'https://passwordinator.netlify.app');
+	res.header('Access-Control-Allow-Origin', '*');
+	res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
+	res.header(
+		'Access-Control-Allow-Headers',
+		'Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization'
+	);
 	next();
 });
-
-app.use(cors());
 
 const db = mysql.createConnection({
 	user: 'root',
